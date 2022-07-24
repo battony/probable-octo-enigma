@@ -1,0 +1,10 @@
+# ignore objects
+*.o
+
+# ignore executables
+*.elf
+*.bin
+
+# ignore vim temporary files
+*.swp
+*.swo

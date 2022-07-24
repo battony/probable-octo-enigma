@@ -1,0 +1,36 @@
+on: push
+
+jobs:
+  build-image:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/battony/docker-in-docker:1.0.0
+      volumes:
+        - /var/run/docker.sock:/var/run/socker.sock
+    steps:
+    - name: Clone
+      run: git clone ${{ github.server_url }}/${{ github.repository }} .
+    - name: Checkout
+      run: git checkout ${{ github.ref_name }}
+    - name: Login
+      run: |
+        docker login ghcr.io \
+          -u ${{ github.repository_owner }} \
+          -p ${{ secrets.GH_TOKEN }}
+    - name: Build
+      run: docker build -t ghcr.io/${{ github.repository }}:${{ github.sha }} .
+    - name: Push
+      run: docker push ghcr.io/${{ github.repository }}:${{ github.sha }}
+  build:
+    needs: build-image
+    runs-on: ubuntu-latest
+    container: ghcr.io/${{ github.repository }}:${{ github.sha }}
+    steps:
+    - name: Clone
+      run: git clone ${{ github.server_url }}/${{ github.repository }} .
+    - name: Checkout
+      run: git checkout ${{ github.ref_name }}
+    - name: Build
+      run: make -j$(nproc)
+    - name: Size
+      run: make size
